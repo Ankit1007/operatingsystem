@@ -2,7 +2,7 @@
 
 int count=0;                                                        //gloabal variable to check starvation condition
  
-struct student 														//structure for storing student information
+struct student 			                                    //structure for storing student information
 {
 	int id;
 	float arrival_time;
@@ -129,7 +129,7 @@ main()                                                               //main func
 	struct student s[n];                                            //declaring variable of structure student type
 	struct teacher t[m];                                            //declaring variable of structure teacher type
 
-	get_teacher(t,m);												//calling function get_teacher
+	get_teacher(t,m);			                        //calling function get_teacher
 
 	get_student(s,n);                                               //calling function get_student
 
