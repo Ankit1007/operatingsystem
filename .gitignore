@@ -1,8 +1,9 @@
 #include<stdio.h>                                                   //header file
 
-int count=0;                                                        //gloabal variable to check starvation condition
+int count=0;
+int count1=0;                                                        //gloabal variable to check starvation condition
  
-struct student 			                                    //structure for storing student information
+struct student 														//structure for storing student information
 {
 	int id;
 	float arrival_time;
@@ -10,6 +11,7 @@ struct student 			                                    //structure for storing st
 	float burst_time;
 	float completion_time;
 	int index;
+	int no;
 };
 
 struct teacher                                                      //structure for storing teacher information
@@ -20,6 +22,7 @@ struct teacher                                                      //structure 
 	float completion_time;
 	float burst_time;
 	int index;
+	int no;
 };
 
 void get_teacher(struct teacher *t, int m)                          //function for inputting teacher's information
@@ -33,8 +36,10 @@ void get_teacher(struct teacher *t, int m)                          //function f
 		scanf("%f",&t[k].arrival_time);
 		printf("Time taken at the counter    -     ");
 		scanf("%f",&t[k].burst_time);
+		t[k].no=k+1;
 	}
 }
+
 void get_student(struct student *s,int n)                           //function for inputting students's information
 {
 	int k;
@@ -46,6 +51,7 @@ void get_student(struct student *s,int n)                           //function f
 		scanf("%f",&s[k].arrival_time);
 		printf("Time taken at the counter    -     ");
 		scanf("%f",&s[k].burst_time);
+		s[k].no=k+1;
 	}
 
 }
@@ -56,15 +62,19 @@ void scheduling(struct teacher *t, int m, struct student *s, int n, int time)   
 	for(i=0;i<m+n;i++)                                                             //for loop to access all visitor
 	{
 		int flag=0;
-		if(m!=0 && k+1<=n && s[k].arrival_time<t[j].arrival_time && time<=s[k].arrival_time && s[k].arrival_time!=t[j].arrival_time)
+		if( m!=0 && k+1<=n && s[k].arrival_time<t[j].arrival_time && time<=s[k].arrival_time && s[k].arrival_time!=t[j].arrival_time )  
 		{
 			flag=1;
 		}	
-		if(m==0 && n!=0)
+		if(n==0 || (time-t[j].arrival_time>=30 && time-s[k].arrival_time>=30))
 		{
-			flag=1;
+			count=0;
 		}
-		if(m!=0 && count<=30 && j<m && flag==0) 
+		if(k+1<=n)
+		{
+			count=time-s[k].arrival_time;
+		}
+		if(m!=0 && (count<=30 || count1==1) && j<m && flag==0) 
 		{
 			if(t[j].arrival_time>=time)
 			{
@@ -76,6 +86,7 @@ void scheduling(struct teacher *t, int m, struct student *s, int n, int time)   
 			}
 			t[j].completion_time=t[j].waiting_time+t[j].burst_time+t[j].arrival_time;
 			count=count+ t[j].burst_time;
+			count1++;
 			time=t[j].completion_time;
 			t[j].index=i;
 			j++;
@@ -92,6 +103,7 @@ void scheduling(struct teacher *t, int m, struct student *s, int n, int time)   
 			}
 			s[k].completion_time=s[k].waiting_time+s[k].burst_time+s[k].arrival_time;
 			count=0;
+			count1=0;
 			time=s[k].completion_time;
 			s[k].index=i;
 			k++;
@@ -108,16 +120,53 @@ void display(struct teacher *t, int m, struct student *s, int n)                
 	{
 		if(t[j].index==i && m!=0)
 		{
-			printf("\n%4d%12d          Teacher %d%14.1f%19.1f%18.1f%18.1f",t[j].index+1,t[j].id,j+1,t[j].arrival_time,t[j].waiting_time,t[j].burst_time,t[j].completion_time);
+			printf("\n%4d%12d          Teacher %d%14.1f%19.1f%18.1f%18.1f",t[j].index+1,t[j].id,t[j].no,t[j].arrival_time,t[j].waiting_time,t[j].burst_time,t[j].completion_time);
 			j++;
 		}
 		else if(s[k].index==i && n!=0)
 		{
-			printf("\n%4d%12d          Student %d%14.1f%19.1f%18.1f%18.1f",s[k].index+1,s[k].id,k+1,s[k].arrival_time,s[k].waiting_time,s[k].burst_time,s[k].completion_time);
+			printf("\n%4d%12d          Student %d%14.1f%19.1f%18.1f%18.1f",s[k].index+1,s[k].id,s[k].no,s[k].arrival_time,s[k].waiting_time,s[k].burst_time,s[k].completion_time);
 			k++;
 		}
 	}
 }
+
+void teacher_sort(struct teacher *t, int m)                              //function for sorting teacher's queue according to their arrival sequence
+{
+	struct teacher temp;
+	int i,j;
+	for (i=0;i<m;++i) 
+	{
+        for (j=i+1;j<m;++j)
+        {
+            if (t[i].arrival_time > t[j].arrival_time) 
+            {
+                temp =  t[i];
+                t[i] = t[j];
+                t[j] = temp;
+            }
+        }
+    }	
+}
+
+void student_sort(struct student *s, int n)                              //function for sorting student's queue according to their arrival sequence
+{
+	struct student temp;
+	int i,j;
+	for (i=0;i<n;++i) 
+	{
+        for (j=i+1;j<n;++j)
+        {
+            if (s[i].arrival_time > s[j].arrival_time) 
+            {
+                temp =  s[i];
+                s[i] = s[j];
+                s[j] = temp;
+            }
+        }
+    }	
+}
+
 main()                                                               //main function
 {
 	int m,n=0;
@@ -129,10 +178,14 @@ main()                                                               //main func
 	struct student s[n];                                            //declaring variable of structure student type
 	struct teacher t[m];                                            //declaring variable of structure teacher type
 
-	get_teacher(t,m);			                        //calling function get_teacher
+	get_teacher(t,m);                                        	//calling function get_teacher
 
 	get_student(s,n);                                               //calling function get_student
-
+	
+	teacher_sort(t,m);                                              //calling function teacher_sort  
+	
+	student_sort(s,n);                                              //calling function student_sort
+	
 	scheduling(t,m,s,n,0);                                          //calling function scheduling
 
 	display(t,m,s,n);                                               //calling function display
